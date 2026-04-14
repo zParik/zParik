@@ -19,7 +19,7 @@ I work across computer vision, cybersecurity research, and full-stack developmen
 | [NotBigBrother](https://github.com/zParik/NotBigBrother) | JavaScript | Privacy-conscious activity monitoring |
 | [ARCHON](https://github.com/zParik/ARCHON) | TypeScript, Node.js, React | Anonymous distributed messaging — Tor-like relay architecture, zero account info, crypto keycard auth |
 | [Compressor](https://github.com/zParik/Compressor) | HTML, JS | File compression tool |
-| [CodeCultivators Hackathon](https://github.com/zParik/CodeCultivators---CommHackathon) | — | Community hackathon entry |
+| [CodeCultivators Hackathon](https://github.com/zParik/CodeCultivators---CommHackathon) | — | University hackathon entry |
 
 ---
 
