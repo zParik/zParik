@@ -1,0 +1,7 @@
+# Local tooling / agent configs
+.agents/
+.claude/
+.impeccable/
+docs/
+PRODUCT.md
+skills-lock.json
