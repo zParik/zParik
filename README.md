@@ -136,9 +136,7 @@ Hackathons: [CodeCultivators at Agrithon](https://github.com/zParik/CodeCultivat
 
 </td>
 <td width="4%"></td>
-<td width="34%" valign="top" align="center">
-
-<br/>
+<td width="34%" valign="middle" align="center">
 
 <img src="./qr-portfolio.png" width="120" alt="QR code linking to parikshieth's portfolio" />
 <br/>
