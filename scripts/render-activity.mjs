@@ -183,8 +183,8 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" wid
   <text x="${W - PAD.r}" y="36" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" letter-spacing="0.8" fill="${BRAND.accent}" fill-opacity="0.9">${total} commits &#183; refreshed ${stamp}</text>
 
   <!-- left axis label -->
-  <text x="${PAD.l - 12}" y="${PAD.t - 16}" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="600" letter-spacing="1.6" fill="${BRAND.axis}">cumulative &#8593;</text>
-  <text x="${W - PAD.r + 12}" y="${PAD.t - 16}" text-anchor="start" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="600" letter-spacing="1.6" fill="${BRAND.axis}">per month</text>
+  <text x="${PAD.l}" y="${PAD.t - 16}" text-anchor="start" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="600" letter-spacing="1.6" fill="${BRAND.axis}">cumulative &#8593;</text>
+  <text x="${W - PAD.r}" y="${PAD.t - 16}" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="600" letter-spacing="1.6" fill="${BRAND.axis}">per month</text>
 
   ${gridLines}
   ${bars}
