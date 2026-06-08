@@ -14,7 +14,7 @@
 
   <!-- eyebrow -->
   <text x="78" y="36" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" font-weight="600" letter-spacing="1.2" fill="#E2ECF5">COMMIT ACTIVITY &#160;&#183;&#160; LAST 24 MONTHS</text>
-  <text x="1122" y="36" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" letter-spacing="0.8" fill="#22D3EE" fill-opacity="0.9">690 commits &#183; refreshed 2026-06-01</text>
+  <text x="1122" y="36" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="14" letter-spacing="0.8" fill="#22D3EE" fill-opacity="0.9">690 commits &#183; refreshed 2026-06-08</text>
 
   <!-- left axis label -->
   <text x="78" y="56" text-anchor="start" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="600" letter-spacing="1.6" fill="#7A8FA8">cumulative &#8593;</text>
