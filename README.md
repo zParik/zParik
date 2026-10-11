@@ -50,7 +50,7 @@ Currently heads-down on **[PaleGuard](https://github.com/zParik/CapStoneProject)
 ### <img src="./assets/glyph-section.svg" width="14" height="14" align="absmiddle" alt=""/> Featured work
 
 **[PaleGuard](https://github.com/zParik/CapStoneProject)** &nbsp;<sub>Python · PyTorch · 3D-CNN</sub>
-<br/>Endpoint Detection and Response that reads process behaviour as a spatio-temporal volume instead of a flat feature vector. 88% detection on malware families never seen at training time. Solo design, implementation, evaluation. Paper under review.
+<br/>Endpoint Detection and Response that reads process behaviour as a spatio-temporal volume instead of a flat feature vector. 88% detection on malware families never seen at training time. Solo design, implementation, evaluation. Published in [Scientific Reports](https://doi.org/10.1038/s41598-026-65582-6).
 
 **[Qyra](https://github.com/zParik/Qyra)** &nbsp;<sub>Tauri · React · TypeScript · Rust</sub>
 <br/>Free, offline, open-source PDF Swiss Army Knife. Ships as a native desktop app on Windows and Linux. Wayland edge cases patched out so the AppImage actually behaves on Arch and Hyprland.
