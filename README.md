@@ -14,7 +14,7 @@
 
 <sub>3rd year BCA &nbsp;·&nbsp; Vellore Institute of Technology</sub>
 
-Currently heads-down on **[PaleGuard](https://github.com/zParik/CapStoneProject)** — a 3D-CNN EDR that reads process behaviour as a spatio-temporal volume instead of a flat feature vector. Turns out you can detect malware families the training set never saw. The rest of the drawer is desktop tooling, anonymity systems, and computer vision pipelines that earn their compute. Mostly building things I wanted to exist and could not find.
+Currently heads-down on **Dommel**, an open cyber-physical EMT engine for inverter-dominated power grids, and **ZonFormer**, deep RL for HPC batch scheduling that tests whether published "DRL beats backfilling" gains survive cleaned traces and honest baselines. Mostly they do not. **[PaleGuard](https://github.com/zParik/CapStoneProject)**, my 3D-CNN malware detector, is now [published in Scientific Reports](https://doi.org/10.1038/s41598-026-65582-6). The rest of the drawer is desktop tooling, anonymity systems, and computer vision pipelines that earn their compute. Mostly building things I wanted to exist and could not find.
 
 </td>
 <td width="4%"></td>
