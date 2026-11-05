@@ -39,6 +39,7 @@ jobs:
           GH_TOKEN:  ${{ secrets.PROFILE_TOKEN || secrets.GITHUB_TOKEN }}
           GH_USER:   ${{ github.repository_owner }}
           TOP_LANGS: "8"
+          LANG_WINDOW_MONTHS: "12"
         run: node scripts/render-languages.mjs
 
       - name: commit if changed

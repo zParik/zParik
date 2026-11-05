@@ -4,11 +4,16 @@
 
 import { writeFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { THEMES, DISPLAY, MONO, measure, text, plate } from "./plate-kit.mjs";
+import { THEMES, DISPLAY, MONO, measure, text, plate, ensureContrast } from "./plate-kit.mjs";
 
 const TOKEN = process.env.GH_TOKEN;
 const USER  = process.env.GH_USER || "zParik";
 const TOPN  = Number(process.env.TOP_LANGS || 8);
+// Only repos pushed within this window count, so the plate shows what I
+// work in now, not a years-old repo with a committed virtualenv.
+const WINDOW_MONTHS = Number(process.env.LANG_WINDOW_MONTHS || 12);
+const since = new Date();
+since.setUTCMonth(since.getUTCMonth() - WINDOW_MONTHS);
 
 if (!TOKEN) {
   console.error("GH_TOKEN required");
@@ -22,8 +27,9 @@ query($login:String!, $cursor:String) {
       pageInfo { hasNextPage endCursor }
       nodes {
         name
+        pushedAt
         languages(first:20, orderBy:{field:SIZE, direction:DESC}) {
-          edges { size node { name } }
+          edges { size node { name color } }
         }
       }
     }
@@ -47,12 +53,17 @@ async function gql(cursor) {
 }
 
 const totals = new Map();
+const colours = new Map();
+let counted = 0;
 let cursor = null;
 do {
   const page = await gql(cursor);
   for (const repo of page.nodes) {
+    if (new Date(repo.pushedAt) < since) continue;
+    counted++;
     for (const edge of repo.languages.edges) {
       totals.set(edge.node.name, (totals.get(edge.node.name) || 0) + edge.size);
+      if (edge.node.color) colours.set(edge.node.name, edge.node.color);
     }
   }
   cursor = page.pageInfo.hasNextPage ? page.pageInfo.endCursor : null;
@@ -60,7 +71,7 @@ do {
 
 const sumAll  = [...totals.values()].reduce((a, b) => a + b, 0) || 1;
 const ranked  = [...totals.entries()].sort((a, b) => b[1] - a[1]);
-const topRows = ranked.slice(0, TOPN).map(([name, size]) => ({ name, pct: (size / sumAll) * 100 }));
+const topRows = ranked.slice(0, TOPN).map(([name, size]) => ({ name, pct: (size / sumAll) * 100, colour: colours.get(name) || "#8a9aab" }));
 const maxPct  = Math.max(...topRows.map(r => r.pct));
 const stamp   = new Date().toISOString().slice(0, 10);
 
@@ -79,7 +90,7 @@ function render(c) {
     return `
   ${text(x0, y + 22, r.name, { size: 18, fill: c.text })}
   <rect x="${trackX}" y="${y + 8}" width="${trackW}" height="16" rx="2" fill="${c.grid}"/>
-  <rect class="reveal" style="--delay:${i * 50}ms" x="${trackX}" y="${y + 8}" width="${w.toFixed(1)}" height="16" rx="2" fill="${i === 0 ? c.sig : c.sigLo}"/>
+  <rect class="reveal" style="--delay:${i * 50}ms" x="${trackX}" y="${y + 8}" width="${w.toFixed(1)}" height="16" rx="2" fill="${ensureContrast(r.colour, c.bg, 3)}"/>
   ${text(x1, y + 22, `${r.pct.toFixed(1)}%`, { size: 18, fill: c.dim, anchor: "end" })}`;
   }).join("");
 
@@ -87,7 +98,7 @@ function render(c) {
   const tSize = 104;
   const body = `
   ${text(PAD - 4, 64 + tSize * 0.72, title, { font: DISPLAY, size: tSize, fill: c.text, tracking: -0.01 })}
-  ${["Share of code bytes in owned,", "non-fork repositories,", "public and private."].map((l, i) => text(PAD, 64 + tSize * 0.72 + 52 + i * 30, l, { size: 19, fill: c.dim })).join("")}
+  ${["Share of code bytes in my repos", `pushed in the last ${WINDOW_MONTHS} months,`, "public and private."].map((l, i) => text(PAD, 64 + tSize * 0.72 + 52 + i * 30, l, { size: 19, fill: c.dim })).join("")}
   ${text(PAD, H - 52, `updated ${stamp}`, { size: 18, fill: c.dim })}
   <line x1="${PAD + leftW + 24}" x2="${PAD + leftW + 24}" y1="40" y2="${H - 40}" stroke="${c.frame}" stroke-width="1"/>
   ${rows}`;
@@ -104,4 +115,4 @@ for (const [name, colours] of Object.entries(THEMES)) {
   writeFileSync(out, render(colours));
   console.log(`wrote ${out}`);
 }
-console.log(`${topRows.length} of ${ranked.length} languages`);
+console.log(`${topRows.length} of ${ranked.length} languages from ${counted} repos: ${topRows.map(r => `${r.name} ${r.pct.toFixed(1)}`).join(", ")}`);

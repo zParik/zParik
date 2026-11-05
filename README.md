@@ -3,7 +3,7 @@
 
   Every image is an "instrument plate": oscilloscope in dark theme, chart
   recorder in light theme. Each <picture> swaps variants by colour scheme.
-    scripts/render-plates.mjs     hero + project plates (run by hand)
+    scripts/render-plates.mjs     hero, project, contact plates (run by hand, needs qrencode)
     scripts/render-activity.mjs   contributions plate  (weekly, CI)
     scripts/render-languages.mjs  languages plate      (weekly, CI)
     scripts/plate-kit.mjs         palette, type, frame shared by all three
@@ -95,5 +95,14 @@ Hackathons: [CodeCultivators at Agrithon](https://github.com/zParik/CodeCultivat
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./assets/languages-dark.svg">
-  <img src="./assets/languages-light.svg" width="100%" alt="Top eight languages by share of code across owned repositories. Refreshed weekly.">
+  <img src="./assets/languages-light.svg" width="100%" alt="Top eight languages by share of code in repositories pushed in the last 12 months. Refreshed weekly.">
 </picture>
+
+<br/>
+
+<a href="https://zparik.github.io/portfolioPage/">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/plate-contact-dark.svg">
+  <img src="./assets/plate-contact-light.svg" width="100%" alt="Contact: parikshieth@gmail.com, LinkedIn in/parikshieth-harish, and a QR code that opens the portfolio.">
+</picture>
+</a>

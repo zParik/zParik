@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 // Render the static profile plates (hero + project plates) in dark and light.
 // Each project plate draws the mechanism of the project, not a logo.
+// Needs `qrencode` on PATH for the contact plate.
 // Output: assets/plate-<name>-<theme>.svg
 
 import { writeFileSync, mkdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import {
   THEMES, DISPLAY, DISPLAY_SEMI, MONO,
@@ -236,9 +238,51 @@ function paleguard(c) {
   });
 }
 
+// ---------------------------------------------------------------- contact
+
+const PORTFOLIO = "https://zparik.github.io/portfolioPage/";
+
+// QR modules from qrencode (ASCII mode prints each module as two chars).
+function qrMatrix(data) {
+  const out = execFileSync("qrencode", ["-t", "ASCII", "-m", "0", "-l", "M", data], { encoding: "utf8" });
+  return out.trimEnd().split("\n").map(row => row.match(/../g).map(cell => cell === "##"));
+}
+
+function contact(c) {
+  const H = 360;
+  const qr = qrMatrix(PORTFOLIO);
+  const n = qr.length, quiet = 3, mod = 7;
+  const tile = (n + quiet * 2) * mod;
+  const tx = W - PAD - tile, ty = (H - tile) / 2;
+  // Dark modules on a paper tile in both themes, so every phone scanner reads it.
+  const paper = "#f3f0e8", ink = "#15191e";
+  let mods = "";
+  qr.forEach((row, y) => row.forEach((on, x) => {
+    if (on) mods += `M${tx + (x + quiet) * mod} ${ty + (y + quiet) * mod}h${mod}v${mod}h-${mod}z`;
+  }));
+  const lines = [
+    ["email", "parikshieth@gmail.com"],
+    ["linkedin", "in/parikshieth-harish"],
+    ["portfolio", "zparik.github.io/portfolioPage"],
+  ];
+  const title = "CONTACT";
+  const tSize = 104;
+  const body = `
+  ${text(PAD - 4, 64 + tSize * 0.72, title, { font: DISPLAY, size: tSize, fill: c.text, tracking: -0.01 })}
+  ${lines.map(([k, v], i) => `${text(PAD, 64 + tSize * 0.72 + 56 + i * 34, k, { size: 18, fill: c.dim })}${text(PAD + 128, 64 + tSize * 0.72 + 56 + i * 34, v, { size: 18, fill: c.text })}`).join("\n  ")}
+  ${text(tx - 32, ty + tile / 2 - 6, "scan for", { size: 18, fill: c.dim, anchor: "end" })}
+  ${text(tx - 32, ty + tile / 2 + 22, "portfolio →", { size: 18, fill: c.sig, anchor: "end" })}
+  <rect x="${tx}" y="${ty}" width="${tile}" height="${tile}" rx="10" fill="${paper}" stroke="${c.frame}"/>
+  <path d="${mods}" fill="${ink}"/>`;
+  return plate({
+    w: W, h: H, c, body,
+    label: "Contact: parikshieth@gmail.com, LinkedIn in/parikshieth-harish, and a QR code that opens the portfolio at zparik.github.io/portfolioPage.",
+  });
+}
+
 // ---------------------------------------------------------------- write
 
-const PLATES = { hero, dommel, zonformer, paleguard };
+const PLATES = { hero, dommel, zonformer, paleguard, contact };
 mkdirSync(resolve("assets"), { recursive: true });
 for (const [name, fn] of Object.entries(PLATES)) {
   for (const [theme, c] of Object.entries(THEMES)) {
