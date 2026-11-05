@@ -4,7 +4,7 @@
 
 import { writeFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { FONT, THEMES } from "./theme.mjs";
+import { THEMES, DISPLAY, MONO, measure, text, plate, trace, polyLen, pathOf } from "./plate-kit.mjs";
 
 const TOKEN  = process.env.GH_TOKEN;
 const USER   = process.env.GH_USER || "zParik";
@@ -92,8 +92,8 @@ const maxCum     = niceTop(total);
 const stamp      = new Date().toISOString().slice(0, 10);
 
 // Layout. Spacing on a 4px grid.
-const W = 1200, H = 340;
-const PAD = { t: 64, r: 72, b: 56, l: 72 };
+const W = 1200, H = 460;
+const PAD = { t: 156, r: 88, b: 72, l: 88 };
 const innerW = W - PAD.l - PAD.r;
 const innerH = H - PAD.t - PAD.b;
 const base   = PAD.t + innerH;
@@ -104,65 +104,54 @@ const xMid  = i => PAD.l + xStep * (i + 0.5);
 const yBar  = c => base - (c / maxMonthly) * innerH;
 const yLine = c => base - (c / maxCum) * innerH;
 
-const pts      = months.map((m, i) => [xMid(i), yLine(m.cumulative)]);
-const linePath = "M " + pts.map(p => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" L ");
-let pathLen = 0;
-for (let i = 1; i < pts.length; i++) pathLen += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-pathLen = Math.ceil(pathLen);
-
+const pts = months.map((m, i) => [xMid(i), yLine(m.cumulative)]);
 const yTicks = i => base - (innerH * i) / TICKS;
 const labelStride = months.length > 18 ? 3 : months.length > 12 ? 2 : 1;
 const lp = pts.at(-1);
 
 function render(c) {
-  const t = (x, y, s, { anchor = "start", fill = c.muted, size = 13, weight = 400 } = {}) =>
-    `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="${size}" font-weight="${weight}" fill="${fill}">${s}</text>`;
+  const m = (x, y, s, o = {}) => text(x, y, s, { size: 16, fill: c.dim, ...o });
 
   const grid = Array.from({ length: TICKS + 1 }, (_, i) =>
     `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${yTicks(i).toFixed(1)}" y2="${yTicks(i).toFixed(1)}" stroke="${c.grid}" stroke-width="1"/>`).join("");
-
   const leftTicks = Array.from({ length: TICKS + 1 }, (_, i) =>
-    t(PAD.l - 12, (yTicks(i) + 4).toFixed(1), Math.round((maxCum * i) / TICKS), { anchor: "end" })).join("");
+    m(PAD.l - 14, yTicks(i) + 5, Math.round((maxCum * i) / TICKS), { anchor: "end" })).join("");
   const rightTicks = Array.from({ length: TICKS + 1 }, (_, i) =>
-    t(W - PAD.r + 12, (yTicks(i) + 4).toFixed(1), Math.round((maxMonthly * i) / TICKS))).join("");
-
-  const xLabels = months.map((m, i) => {
+    m(W - PAD.r + 14, yTicks(i) + 5, Math.round((maxMonthly * i) / TICKS))).join("");
+  const xLabels = months.map((mo, i) => {
     if (i % labelStride !== 0 && i !== months.length - 1) return "";
-    const showYear = i === 0 || months[i - 1]?.year !== m.year;
-    return t(xMid(i).toFixed(1), H - PAD.b + 28, showYear ? `${m.label} ${m.year}` : m.label, { anchor: "middle" });
+    const showYear = i === 0 || months[i - 1]?.year !== mo.year;
+    return m(xMid(i), H - PAD.b + 32, showYear ? `${mo.label} ${mo.year}` : mo.label, { anchor: "middle" });
+  }).join("");
+  const bars = months.map((mo, i) => {
+    const y = yBar(mo.count);
+    return `<rect class="reveal" style="--delay:${i * 15}ms" x="${(xMid(i) - barW / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${(base - y).toFixed(1)}" rx="2" fill="${c.sigLo}"><title>${mo.label} ${mo.year}: ${mo.count} contributions</title></rect>`;
   }).join("");
 
-  const bars = months.map((m, i) => {
-    const y = yBar(m.count);
-    return `<rect x="${(xMid(i) - barW / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${(base - y).toFixed(1)}" rx="2" fill="${c.bar}"><title>${m.label} ${m.year}: ${m.count} contributions</title></rect>`;
-  }).join("");
-
-  // Legend: shape carries the meaning, not colour alone.
-  const legend = `
-    <line x1="${PAD.l}" x2="${PAD.l + 20}" y1="28" y2="28" stroke="${c.accent}" stroke-width="2.5" stroke-linecap="round"/>
-    ${t(PAD.l + 28, 32, "Running total (left axis)", { fill: c.text })}
-    <rect x="${PAD.l + 220}" y="22" width="10" height="12" rx="2" fill="${c.bar}"/>
-    ${t(PAD.l + 238, 32, "Per month (right axis)", { fill: c.text })}
-    ${t(W - PAD.r, 32, `Updated ${stamp}`, { anchor: "end" })}`;
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${total} GitHub contributions over the last ${MONTHS} months, shown as a running total and monthly bars.">
-  <style>
-    text { font-family: ${FONT}; font-variant-numeric: tabular-nums; }
-    .line { stroke-dasharray: ${pathLen}; animation: draw 800ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-    @keyframes draw { from { stroke-dashoffset: ${pathLen}; } to { stroke-dashoffset: 0; } }
-    @media (prefers-reduced-motion: reduce) { .line { animation: none; } }
-  </style>
-  ${legend}
+  const title = "CONTRIBUTIONS";
+  const tSize = 72;
+  const lx = W - 64 - 250;
+  const body = `
+  ${text(60, 52 + tSize * 0.72, title, { font: DISPLAY, size: tSize, fill: c.text, tracking: -0.01 })}
+  ${text(64 + measure(DISPLAY, title, tSize, -0.01) + 16, 52 + tSize * 0.72, `last ${MONTHS} months`, { size: 18, fill: c.dim })}
+  <line x1="${lx}" x2="${lx + 24}" y1="66" y2="66" stroke="${c.sig}" stroke-width="3" stroke-linecap="round"/>
+  ${m(lx + 36, 72, "running total, left", { fill: c.text })}
+  <rect x="${lx + 5}" y="88" width="14" height="16" rx="2" fill="${c.sigLo}"/>
+  ${m(lx + 36, 102, "per month, right", { fill: c.text })}
   ${grid}
   ${bars}
-  <path class="line" d="${linePath}" fill="none" stroke="${c.accent}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="${lp[0].toFixed(1)}" cy="${lp[1].toFixed(1)}" r="4" fill="${c.accent}"/>
-  ${t((lp[0] - 12).toFixed(1), (lp[1] + 5).toFixed(1), total, { anchor: "end", fill: c.text, size: 15, weight: 600 })}
+  ${trace(pathOf(pts), { stroke: c.sig, width: 3, len: polyLen(pts) })}
+  <circle cx="${lp[0].toFixed(1)}" cy="${lp[1].toFixed(1)}" r="5" fill="${c.sig}"/>
+  ${text(lp[0] - 14, lp[1] + 6, total, { size: 20, fill: c.text, anchor: "end" })}
   ${leftTicks}
   ${rightTicks}
   ${xLabels}
-</svg>
-`;
+  ${m(W - 64, H - 18, `updated ${stamp}`, { anchor: "end", size: 14 })}`;
+
+  return plate({
+    w: W, h: H, c, body,
+    label: `${total} GitHub contributions over the last ${MONTHS} months, shown as a running total line over monthly bars.`,
+  });
 }
 
 mkdirSync(resolve("assets"), { recursive: true });

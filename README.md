@@ -1,37 +1,63 @@
 <!--
   Parikshieth Harish · GitHub profile README
-  Plain markdown, single column, so it reads the same on desktop and mobile.
-  Graphs come in light and dark variants (assets/*-light.svg, *-dark.svg),
-  regenerated weekly by .github/workflows/activity-graph.yml.
+
+  Every image is an "instrument plate": oscilloscope in dark theme, chart
+  recorder in light theme. Each <picture> swaps variants by colour scheme.
+    scripts/render-plates.mjs     hero + project plates (run by hand)
+    scripts/render-activity.mjs   contributions plate  (weekly, CI)
+    scripts/render-languages.mjs  languages plate      (weekly, CI)
+    scripts/plate-kit.mjs         palette, type, frame shared by all three
+    scripts/build-fonts.sh        rebuilds the embedded font subsets
 -->
 
-# Parikshieth Harish
+<a href="https://zparik.github.io/portfolioPage/">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/plate-hero-dark.svg">
+  <img src="./assets/plate-hero-light.svg" width="100%" alt="Parikshieth Harish. Systems that watch processes and pixels.">
+</picture>
+</a>
 
-**Systems that watch processes and pixels.** Third-year BCA at Vellore Institute of Technology. I build malware detection from process behaviour, computer vision pipelines, and desktop tools I wanted to exist and could not find.
+<br/>
 
-[parikshieth@gmail.com](mailto:parikshieth@gmail.com) · [LinkedIn](https://linkedin.com/in/parikshieth-harish-10481528b/) · [Portfolio](https://zparik.github.io/portfolioPage/)
+Third-year BCA at VIT Vellore. I build malware detection from process behaviour, computer vision pipelines, and the desktop tools I wanted and could not find.
 
-## Now
+**[parikshieth@gmail.com](mailto:parikshieth@gmail.com)** · **[LinkedIn](https://linkedin.com/in/parikshieth-harish-10481528b/)** · **[Portfolio](https://zparik.github.io/portfolioPage/)**
 
-**Dommel** is an open cyber-physical EMT engine for inverter-dominated power grids.
+## Now building
 
-**ZonFormer** applies deep reinforcement learning to HPC batch scheduling. It tests whether published "DRL beats backfilling" results survive cleaned traces and honest baselines. So far, mostly they do not.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/plate-dommel-dark.svg">
+  <img src="./assets/plate-dommel-light.svg" width="100%" alt="Dommel: an open cyber-physical EMT engine for inverter-dominated power grids. In progress.">
+</picture>
+
+<br/>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/plate-zonformer-dark.svg">
+  <img src="./assets/plate-zonformer-light.svg" width="100%" alt="ZonFormer: deep reinforcement learning for HPC batch scheduling. It tests whether published DRL gains over backfilling survive cleaned traces and honest baselines. Mostly, they do not. In progress.">
+</picture>
 
 ## Published
 
-**[PaleGuard](https://github.com/zParik/CapStoneProject)**, *Scientific Reports*, 2026. [doi:10.1038/s41598-026-65582-6](https://doi.org/10.1038/s41598-026-65582-6)\
-Endpoint detection that reads process behaviour as a spatio-temporal volume and classifies it with a 3D-CNN, instead of flattening it into a feature vector. 88% detection on malware families never seen in training. Solo design, implementation, and evaluation. Python, PyTorch.
+<a href="https://doi.org/10.1038/s41598-026-65582-6">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/plate-paleguard-dark.svg">
+  <img src="./assets/plate-paleguard-light.svg" width="100%" alt="PaleGuard: a 3D-CNN over process behaviour as a spatio-temporal volume. 88% detection on malware families unseen in training. Published in Scientific Reports, 2026.">
+</picture>
+</a>
 
-## Selected work
+**PaleGuard** in *Scientific Reports*, 2026: [doi:10.1038/s41598-026-65582-6](https://doi.org/10.1038/s41598-026-65582-6) · [code](https://github.com/zParik/CapStoneProject). Solo design, implementation, and evaluation.
+
+## Also shipped
 
 **[Qyra](https://github.com/zParik/Qyra)** · Tauri, React, TypeScript, Rust\
 Free, offline PDF toolkit for Windows and Linux. I patched the Wayland edge cases so the AppImage runs correctly on Arch and Hyprland.
 
-**[CV-Project](https://github.com/zParik/CV-Project)** · Python\
-Indoor navigation assist. Fuses object detection with depth and scene cues to guide a person through unfamiliar interiors. This project moved me from tuning models to designing the pipeline around them.
-
 **[ARCHON](https://github.com/zParik/ARCHON)** · TypeScript, Node, React\
 Anonymous distributed messaging over a Tor-style relay graph, with crypto keycard authentication and no account data. The operator cannot surveil its own users.
+
+**[CV-Project](https://github.com/zParik/CV-Project)** · Python\
+Indoor navigation assist. Fuses object detection with depth and scene cues to guide a person through unfamiliar interiors.
 
 **[NotBigBrother](https://github.com/zParik/NotBigBrother)** · JavaScript\
 Activity monitoring that keeps behaviour data on your machine.
@@ -58,14 +84,16 @@ Hackathons: [CodeCultivators at Agrithon](https://github.com/zParik/CodeCultivat
 **Desktop and mobile:** Tauri, Rust, Flutter, Dart\
 **Data and infrastructure:** PostgreSQL, MongoDB, InfluxDB, Supabase, Docker, Linux
 
-## Activity
+## Telemetry
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./assets/activity-dark.svg">
   <img src="./assets/activity-light.svg" width="100%" alt="GitHub contributions over the last 24 months, as a running total line over monthly bars. Refreshed weekly.">
 </picture>
 
+<br/>
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./assets/languages-dark.svg">
-  <img src="./assets/languages-light.svg" width="600" alt="Top eight languages by share of code across owned repositories. Refreshed weekly.">
+  <img src="./assets/languages-light.svg" width="100%" alt="Top eight languages by share of code across owned repositories. Refreshed weekly.">
 </picture>

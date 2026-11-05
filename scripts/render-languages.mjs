@@ -4,7 +4,7 @@
 
 import { writeFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { FONT, THEMES } from "./theme.mjs";
+import { THEMES, DISPLAY, MONO, measure, text, plate } from "./plate-kit.mjs";
 
 const TOKEN = process.env.GH_TOKEN;
 const USER  = process.env.GH_USER || "zParik";
@@ -64,31 +64,38 @@ const topRows = ranked.slice(0, TOPN).map(([name, size]) => ({ name, pct: (size 
 const maxPct  = Math.max(...topRows.map(r => r.pct));
 const stamp   = new Date().toISOString().slice(0, 10);
 
-// Layout. Spacing on a 4px grid.
-const W = 600, ROW_H = 32, PAD_T = 8, PAD_B = 44, PAD_X = 0;
-const H = PAD_T + topRows.length * ROW_H + PAD_B;
-const labelW = 112, pctW = 56;
-const trackX = PAD_X + labelW;
-const trackW = W - PAD_X - pctW - trackX;
+// Layout: same two-column shell as the project plates.
+const W = 1200, PAD = 64, ROW_H = 34;
+const H = Math.max(360, 72 + topRows.length * ROW_H + 40);
+const leftW = 420;
+const x0 = PAD + leftW + 64, x1 = W - PAD;
+const labelW = 128, pctW = 72;
+const trackX = x0 + labelW, trackW = x1 - pctW - trackX;
 
 function render(c) {
   const rows = topRows.map((r, i) => {
-    const y = PAD_T + i * ROW_H;
+    const y = 64 + i * ROW_H;
+    const w = (r.pct / maxPct) * trackW;
     return `
-  <g transform="translate(0,${y})">
-    <text x="${PAD_X}" y="20" font-size="14" fill="${c.text}">${r.name}</text>
-    <rect x="${trackX}" y="10" width="${trackW}" height="12" rx="2" fill="${c.track}"/>
-    <rect x="${trackX}" y="10" width="${((r.pct / maxPct) * trackW).toFixed(1)}" height="12" rx="2" fill="${c.accent}"/>
-    <text x="${W - PAD_X}" y="20" text-anchor="end" font-size="14" fill="${c.muted}">${r.pct.toFixed(1)}%</text>
-  </g>`;
+  ${text(x0, y + 22, r.name, { size: 18, fill: c.text })}
+  <rect x="${trackX}" y="${y + 8}" width="${trackW}" height="16" rx="2" fill="${c.grid}"/>
+  <rect class="reveal" style="--delay:${i * 50}ms" x="${trackX}" y="${y + 8}" width="${w.toFixed(1)}" height="16" rx="2" fill="${i === 0 ? c.sig : c.sigLo}"/>
+  ${text(x1, y + 22, `${r.pct.toFixed(1)}%`, { size: 18, fill: c.dim, anchor: "end" })}`;
   }).join("");
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Top ${topRows.length} languages by code size: ${topRows.map(r => `${r.name} ${r.pct.toFixed(1)} percent`).join(", ")}.">
-  <style>text { font-family: ${FONT}; font-variant-numeric: tabular-nums; }</style>
-  ${rows}
-  <text x="${PAD_X}" y="${H - 12}" font-size="12" fill="${c.muted}">Share of code bytes in owned, non-fork repositories, public and private. Updated ${stamp}.</text>
-</svg>
-`;
+  const title = "LANGUAGES";
+  const tSize = 104;
+  const body = `
+  ${text(PAD - 4, 64 + tSize * 0.72, title, { font: DISPLAY, size: tSize, fill: c.text, tracking: -0.01 })}
+  ${["Share of code bytes in owned,", "non-fork repositories,", "public and private."].map((l, i) => text(PAD, 64 + tSize * 0.72 + 52 + i * 30, l, { size: 19, fill: c.dim })).join("")}
+  ${text(PAD, H - 52, `updated ${stamp}`, { size: 18, fill: c.dim })}
+  <line x1="${PAD + leftW + 24}" x2="${PAD + leftW + 24}" y1="40" y2="${H - 40}" stroke="${c.frame}" stroke-width="1"/>
+  ${rows}`;
+
+  return plate({
+    w: W, h: H, c, body,
+    label: `Top ${topRows.length} languages by share of code: ${topRows.map(r => `${r.name} ${r.pct.toFixed(1)} percent`).join(", ")}.`,
+  });
 }
 
 mkdirSync(resolve("assets"), { recursive: true });

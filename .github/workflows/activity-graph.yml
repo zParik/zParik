@@ -8,7 +8,8 @@ on:
     paths:
       - scripts/render-activity.mjs
       - scripts/render-languages.mjs
-      - scripts/theme.mjs
+      - scripts/plate-kit.mjs
+      - fonts/**
       - .github/workflows/activity-graph.yml
 
 permissions:
