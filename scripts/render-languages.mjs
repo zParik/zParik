@@ -1,29 +1,19 @@
 #!/usr/bin/env node
-// Render top languages across owned, non-fork public repos as a compact SVG.
-// Cyan-ladder bars (one-accent brand law).
+// Render top languages across owned, non-fork repos (public + private).
+// Writes assets/languages-dark.svg and assets/languages-light.svg.
 
 import { writeFileSync, mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
+import { FONT, THEMES } from "./theme.mjs";
 
 const TOKEN = process.env.GH_TOKEN;
 const USER  = process.env.GH_USER || "zParik";
 const TOPN  = Number(process.env.TOP_LANGS || 8);
-const OUT   = resolve("assets/top-languages.svg");
 
 if (!TOKEN) {
   console.error("GH_TOKEN required");
   process.exit(1);
 }
-
-const BRAND = {
-  bg:     "#0B1220",
-  bgTop:  "#0E1626",
-  accent: "#22D3EE",
-  text:   "#E2ECF5",
-  muted:  "#9FB2C8",
-  axis:   "#7A8FA8",
-  track:  "#16213A",
-};
 
 const query = `
 query($login:String!, $cursor:String) {
@@ -70,57 +60,41 @@ do {
 
 const sumAll  = [...totals.values()].reduce((a, b) => a + b, 0) || 1;
 const ranked  = [...totals.entries()].sort((a, b) => b[1] - a[1]);
-const topRows = ranked.slice(0, TOPN).map(([name, size]) => ({
-  name,
-  size,
-  pct: (size / sumAll) * 100,
-}));
+const topRows = ranked.slice(0, TOPN).map(([name, size]) => ({ name, pct: (size / sumAll) * 100 }));
+const maxPct  = Math.max(...topRows.map(r => r.pct));
+const stamp   = new Date().toISOString().slice(0, 10);
 
-// Layout — compact column.
-const W = 540, ROW_H = 30, PAD_T = 64, PAD_B = 32, PAD_L = 22, PAD_R = 22;
+// Layout. Spacing on a 4px grid.
+const W = 600, ROW_H = 32, PAD_T = 8, PAD_B = 44, PAD_X = 0;
 const H = PAD_T + topRows.length * ROW_H + PAD_B;
-const labelW = 110;
-const pctW   = 56;
-const trackX = PAD_L + labelW;
-const trackW = W - PAD_R - pctW - trackX - 10;
+const labelW = 112, pctW = 56;
+const trackX = PAD_X + labelW;
+const trackW = W - PAD_X - pctW - trackX;
 
-const maxPct = Math.max(...topRows.map(r => r.pct));
-
-const stamp = new Date().toISOString().slice(0, 10);
-
-const rows = topRows.map((r, i) => {
-  const y       = PAD_T + i * ROW_H;
-  const barW    = (r.pct / maxPct) * trackW;
-  const opacity = (1 - i / (topRows.length + 1)).toFixed(2);
-  const delay   = (i * 0.08).toFixed(2);
-  return `
+function render(c) {
+  const rows = topRows.map((r, i) => {
+    const y = PAD_T + i * ROW_H;
+    return `
   <g transform="translate(0,${y})">
-    <text x="${PAD_L}" y="18" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="${BRAND.text}">${r.name}</text>
-    <rect x="${trackX}" y="10" width="${trackW}" height="10" rx="2" fill="${BRAND.track}"/>
-    <rect x="${trackX}" y="10" width="0" height="10" rx="2" fill="${BRAND.accent}" fill-opacity="${opacity}">
-      <animate attributeName="width" from="0" to="${barW.toFixed(1)}" dur="1.1s" begin="${delay}s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.16 1 0.3 1"/>
-    </rect>
-    <text x="${W - PAD_R}" y="18" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="${BRAND.muted}">${r.pct.toFixed(1)}%</text>
+    <text x="${PAD_X}" y="20" font-size="14" fill="${c.text}">${r.name}</text>
+    <rect x="${trackX}" y="10" width="${trackW}" height="12" rx="2" fill="${c.track}"/>
+    <rect x="${trackX}" y="10" width="${((r.pct / maxPct) * trackW).toFixed(1)}" height="12" rx="2" fill="${c.accent}"/>
+    <text x="${W - PAD_X}" y="20" text-anchor="end" font-size="14" fill="${c.muted}">${r.pct.toFixed(1)}%</text>
   </g>`;
-}).join("");
+  }).join("");
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Top ${topRows.length} languages across owned public and private repositories. ${topRows.map(r => `${r.name} ${r.pct.toFixed(1)} percent`).join(", ")}.">
-  <defs>
-    <linearGradient id="lbg" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="${BRAND.bgTop}"/>
-      <stop offset="1" stop-color="${BRAND.bg}"/>
-    </linearGradient>
-  </defs>
-  <rect x="0" y="0" width="${W}" height="${H}" rx="10" fill="url(#lbg)" stroke="${BRAND.accent}" stroke-opacity="0.18"/>
-
-  <text x="${PAD_L}" y="32" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="600" letter-spacing="2.2" fill="${BRAND.text}">T O P &#160; L A N G U A G E S</text>
-  <text x="${W - PAD_R}" y="32" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="11" letter-spacing="0.8" fill="${BRAND.accent}" fill-opacity="0.9">refreshed ${stamp}</text>
-  <text x="${PAD_L}" y="50" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="10" font-weight="500" letter-spacing="1.4" fill="${BRAND.axis}">owned, non-fork &#183; public + private</text>
-
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Top ${topRows.length} languages by code size: ${topRows.map(r => `${r.name} ${r.pct.toFixed(1)} percent`).join(", ")}.">
+  <style>text { font-family: ${FONT}; font-variant-numeric: tabular-nums; }</style>
   ${rows}
+  <text x="${PAD_X}" y="${H - 12}" font-size="12" fill="${c.muted}">Share of code bytes in owned, non-fork repositories, public and private. Updated ${stamp}.</text>
 </svg>
 `;
+}
 
-mkdirSync(dirname(OUT), { recursive: true });
-writeFileSync(OUT, svg);
-console.log(`wrote ${OUT} · ${topRows.length} of ${ranked.length} languages`);
+mkdirSync(resolve("assets"), { recursive: true });
+for (const [name, colours] of Object.entries(THEMES)) {
+  const out = resolve(`assets/languages-${name}.svg`);
+  writeFileSync(out, render(colours));
+  console.log(`wrote ${out}`);
+}
+console.log(`${topRows.length} of ${ranked.length} languages`);

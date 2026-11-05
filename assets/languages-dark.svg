@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 308" width="600" height="308" role="img" aria-label="Top 8 languages by code size: Python 40.1 percent, C++ 18.3 percent, JavaScript 13.0 percent, HTML 7.4 percent, TeX 6.4 percent, TypeScript 4.6 percent, CSS 2.0 percent, Rust 1.7 percent.">
+  <style>text { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif; font-variant-numeric: tabular-nums; }</style>
+  
+  <g transform="translate(0,8)">
+    <text x="0" y="20" font-size="14" fill="#e6edf3">Python</text>
+    <rect x="112" y="10" width="432" height="12" rx="2" fill="#161b22"/>
+    <rect x="112" y="10" width="432.0" height="12" rx="2" fill="#22D3EE"/>
+    <text x="600" y="20" text-anchor="end" font-size="14" fill="#8b98a5">40.1%</text>
+  </g>
+  <g transform="translate(0,40)">
+    <text x="0" y="20" font-size="14" fill="#e6edf3">C++</text>
+    <rect x="112" y="10" width="432" height="12" rx="2" fill="#161b22"/>
+    <rect x="112" y="10" width="197.4" height="12" rx="2" fill="#22D3EE"/>
+    <text x="600" y="20" text-anchor="end" font-size="14" fill="#8b98a5">18.3%</text>
+  </g>
+  <g transform="translate(0,72)">
+    <text x="0" y="20" font-size="14" fill="#e6edf3">JavaScript</text>
+    <rect x="112" y="10" width="432" height="12" rx="2" fill="#161b22"/>
+    <rect x="112" y="10" width="140.1" height="12" rx="2" fill="#22D3EE"/>
+    <text x="600" y="20" text-anchor="end" font-size="14" fill="#8b98a5">13.0%</text>
+  </g>
+  <g transform="translate(0,104)">
+    <text x="0" y="20" font-size="14" fill="#e6edf3">HTML</text>
+    <rect x="112" y="10" width="432" height="12" rx="2" fill="#161b22"/>
+    <rect x="112" y="10" width="79.6" height="12" rx="2" fill="#22D3EE"/>
+    <text x="600" y="20" text-anchor="end" font-size="14" fill="#8b98a5">7.4%</text>
+  </g>
+  <g transform="translate(0,136)">
+    <text x="0" y="20" font-size="14" fill="#e6edf3">TeX</text>
+    <rect x="112" y="10" width="432" height="12" rx="2" fill="#161b22"/>
+    <rect x="112" y="10" width="69.5" height="12" rx="2" fill="#22D3EE"/>
+    <text x="600" y="20" text-anchor="end" font-size="14" fill="#8b98a5">6.4%</text>
+  </g>
+  <g transform="translate(0,168)">
+    <text x="0" y="20" font-size="14" fill="#e6edf3">TypeScript</text>
+    <rect x="112" y="10" width="432" height="12" rx="2" fill="#161b22"/>
+    <rect x="112" y="10" width="49.7" height="12" rx="2" fill="#22D3EE"/>
+    <text x="600" y="20" text-anchor="end" font-size="14" fill="#8b98a5">4.6%</text>
+  </g>
+  <g transform="translate(0,200)">
+    <text x="0" y="20" font-size="14" fill="#e6edf3">CSS</text>
+    <rect x="112" y="10" width="432" height="12" rx="2" fill="#161b22"/>
+    <rect x="112" y="10" width="21.1" height="12" rx="2" fill="#22D3EE"/>
+    <text x="600" y="20" text-anchor="end" font-size="14" fill="#8b98a5">2.0%</text>
+  </g>
+  <g transform="translate(0,232)">
+    <text x="0" y="20" font-size="14" fill="#e6edf3">Rust</text>
+    <rect x="112" y="10" width="432" height="12" rx="2" fill="#161b22"/>
+    <rect x="112" y="10" width="18.3" height="12" rx="2" fill="#22D3EE"/>
+    <text x="600" y="20" text-anchor="end" font-size="14" fill="#8b98a5">1.7%</text>
+  </g>
+  <text x="0" y="296" font-size="12" fill="#8b98a5">Share of code bytes in owned, non-fork repositories, public and private. Updated 2026-11-05.</text>
+</svg>

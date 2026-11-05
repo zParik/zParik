@@ -8,6 +8,7 @@ on:
     paths:
       - scripts/render-activity.mjs
       - scripts/render-languages.mjs
+      - scripts/theme.mjs
       - .github/workflows/activity-graph.yml
 
 permissions:
@@ -43,7 +44,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/activity-cumulative.svg assets/top-languages.svg
+          git add assets/activity-*.svg assets/languages-*.svg
           if git diff --staged --quiet; then
             echo "no changes"
           else
