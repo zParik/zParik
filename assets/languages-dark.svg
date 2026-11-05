@@ -26,7 +26,7 @@
   <text x="1136.0" y="120.0" font-family="JetBrainsMono-Medium" font-size="18" fill="#8a9aab" text-anchor="end">18.3%</text>
   <text x="548.0" y="154.0" font-family="JetBrainsMono-Medium" font-size="18" fill="#eef3f7" text-anchor="start">JavaScript</text>
   <rect x="676" y="140" width="388" height="16" rx="2" fill="#121b25"/>
-  <rect class="reveal" style="--delay:100ms" x="676" y="140" width="125.8" height="16" rx="2" fill="#1d5e6c"/>
+  <rect class="reveal" style="--delay:100ms" x="676" y="140" width="126.2" height="16" rx="2" fill="#1d5e6c"/>
   <text x="1136.0" y="154.0" font-family="JetBrainsMono-Medium" font-size="18" fill="#8a9aab" text-anchor="end">13.0%</text>
   <text x="548.0" y="188.0" font-family="JetBrainsMono-Medium" font-size="18" fill="#eef3f7" text-anchor="start">HTML</text>
   <rect x="676" y="174" width="388" height="16" rx="2" fill="#121b25"/>
