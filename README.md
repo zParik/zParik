@@ -3,7 +3,7 @@
 
   Every image is an "instrument plate": oscilloscope in dark theme, chart
   recorder in light theme. Each <picture> swaps variants by colour scheme.
-    scripts/render-plates.mjs     hero, project, contact plates (run by hand, needs qrencode)
+    scripts/render-plates.mjs     hero, project, tools, contact plates (run by hand, needs qrencode)
     scripts/render-activity.mjs   contributions plate  (weekly, CI)
     scripts/render-languages.mjs  languages plate      (weekly, CI)
     scripts/plate-kit.mjs         palette, type, frame shared by all three
@@ -46,7 +46,7 @@ Third-year BCA at VIT Vellore. I build malware detection from process behaviour,
 </picture>
 </a>
 
-**PaleGuard** in *Scientific Reports*, 2026: [doi:10.1038/s41598-026-65582-6](https://doi.org/10.1038/s41598-026-65582-6) · [code](https://github.com/zParik/CapStoneProject). Solo design, implementation, and evaluation.
+**PaleGuard** in *Scientific Reports*, 2026: [doi:10.1038/s41598-026-65582-6](https://doi.org/10.1038/s41598-026-65582-6) · [code](https://github.com/zParik/CapStoneProject). The full capstone system goes further: a Flutter client captures packets through Npcap over Dart FFI, streams them over gRPC to a FastAPI server, renders each 512-packet window as a 256×256 traffic image, and flags anomalous network traffic with a convolutional memory-augmented autoencoder. Solo design, implementation, and evaluation.
 
 ## Also shipped
 
@@ -78,11 +78,24 @@ Hackathons: [CodeCultivators at Agrithon](https://github.com/zParik/CodeCultivat
 
 ## Tools
 
-**ML and vision:** Python, PyTorch, OpenCV, YOLOv8, MediaPipe\
-**Security:** AES-GCM, RSA blind signatures, ECDHE\
-**Web:** TypeScript, React, Next.js, Node.js, Django, Flask\
-**Desktop and mobile:** Tauri, Rust, Flutter, Dart\
-**Data and infrastructure:** PostgreSQL, MongoDB, InfluxDB, Supabase, Docker, Linux
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/plate-tools-dark.svg">
+  <img src="./assets/plate-tools-light.svg" width="100%" alt="Tools as a patch bay. Cables join tools that shipped together: in PaleGuard, Python to PyTorch, Dart to Npcap, FastAPI to gRPC and to InfluxDB; Python to OpenCV in CV-Project; Rust to Tauri and TypeScript to React in Qyra; Node.js to AES-GCM in ARCHON; Hyprland to Lua in Valkyrn.">
+</picture>
+
+<details>
+<summary>Tools as text</summary>
+
+<br/>
+
+**Languages:** C++, C, Python, Rust, TypeScript, Dart\
+**ML and vision:** PyTorch, OpenCV, YOLOv8, MediaPipe\
+**App and web:** Tauri, Flutter, React, Next.js, Node.js, FastAPI, Django, Flask\
+**Networking and security:** Npcap, gRPC, Protobuf, AES-GCM, RSA blind signatures, ECDHE\
+**Data and infrastructure:** PostgreSQL, InfluxDB, MongoDB, Supabase, Docker, CMake\
+**OS and shell:** Arch Linux, Windows, Bash, PowerShell, Hyprland, Lua
+
+</details>
 
 ## Telemetry
 

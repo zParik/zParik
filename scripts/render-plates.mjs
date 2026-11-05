@@ -9,7 +9,7 @@ import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import {
   THEMES, DISPLAY, DISPLAY_SEMI, MONO,
-  measure, text, rng, pathOf, plate, trace, polyLen,
+  measure, text, rng, pathOf, plate, trace, polyLen, ensureContrast, esc,
 } from "./plate-kit.mjs";
 
 const W = 1200;
@@ -280,14 +280,140 @@ function contact(c) {
   });
 }
 
+// ---------------------------------------------------------------- tools
+
+// A patch bay. Modules are tool groups; each cable joins two tools that
+// shipped together in a named project, and carries a looping signal pulse.
+const MODULES = [
+  ["LANGUAGES",      ["C++", "C", "Python", "Rust", "TypeScript", "Dart"]],
+  ["ML + VISION",    ["PyTorch", "OpenCV", "YOLOv8", "MediaPipe"]],
+  ["APP + WEB",      ["Tauri", "Flutter", "React", "Next.js", "Node.js", "FastAPI", "Django", "Flask"]],
+  ["NET + SECURITY", ["Npcap", "gRPC", "Protobuf", "AES-GCM", "Blind RSA", "ECDHE"]],
+  ["DATA + INFRA",   ["PostgreSQL", "InfluxDB", "MongoDB", "Supabase", "Docker", "CMake"]],
+  ["OS + SHELL",     ["Arch Linux", "Windows", "Bash", "PowerShell", "Hyprland", "Lua"]],
+];
+const CABLES = [
+  // [from, to, project]
+  ["Python", "PyTorch", "PaleGuard"],
+  ["Python", "OpenCV", "CV-Project"],
+  ["Rust", "Tauri", "Qyra"],
+  ["TypeScript", "React", "Qyra"],
+  ["Dart", "Npcap", "PaleGuard"],
+  ["FastAPI", "gRPC", "PaleGuard"],
+  ["FastAPI", "InfluxDB", "PaleGuard"],
+  ["Node.js", "AES-GCM", "ARCHON"],
+  ["Hyprland", "Lua", "Valkyrn"],
+];
+const CABLE_INKS = {
+  dark:  ["#22d3ee", "#f5a524", "#f34b7d", "#a3e635", "#c084fc", "#60a5fa"],
+  light: ["#0b6b85", "#b93b0a", "#c2185b", "#4d7c0f", "#7e22ce", "#1d4ed8"],
+};
+
+function tools(c, theme) {
+  const top = 200, rowH = 40, headH = 60;
+  const gap = 12;
+  const modW = (W - PAD * 2 - gap * (MODULES.length - 1)) / MODULES.length;
+  const rows = Math.max(...MODULES.map(m => m[1].length));
+  const modH = headH + rows * rowH + 20;
+  const panel = theme === "dark" ? "#0f161e" : "#ebe6da";
+
+  const jacks = new Map();
+  let mods = "";
+  MODULES.forEach(([name, items], mi) => {
+    const x = PAD + mi * (modW + gap);
+    const screws = [[x + 12, top + 12], [x + modW - 12, top + 12], [x + 12, top + modH - 12], [x + modW - 12, top + modH - 12]]
+      .map(([sx, sy]) => `<circle cx="${sx}" cy="${sy}" r="3.5" fill="${c.bg}" stroke="${c.frame}"/>`).join("");
+    mods += `<rect x="${x}" y="${top}" width="${modW}" height="${modH}" rx="8" fill="${panel}" stroke="${c.frame}"/>${screws}`;
+    mods += text(x + 18, top + 42, name, { font: DISPLAY_SEMI, size: 26, fill: c.text, tracking: 0.01 });
+    items.forEach((item, i) => {
+      const jx = x + modW - 24, jy = top + headH + 20 + i * rowH;
+      jacks.set(item, [jx, jy]);
+      mods += `<circle cx="${jx}" cy="${jy}" r="9" fill="${panel}" stroke="${c.dim}" stroke-width="1.5"/><circle cx="${jx}" cy="${jy}" r="4.5" fill="${c.bg}"/>`;
+      mods += text(x + 18, jy + 6, item, { size: 16, fill: c.text });
+    });
+  });
+
+  // Cables droop under gravity; sag grows with span.
+  let cables = "", plugs = "", tags = "";
+  const inks = CABLE_INKS[theme].map(h => ensureContrast(h, c.bg, 3));
+  // Pack cords into hang levels: shortest first, each into the highest level
+  // whose cords do not overlap it horizontally (tags included).
+  const spanOf = ([a, b]) => Math.abs(jacks.get(b)[0] - jacks.get(a)[0]);
+  const range = ([a, b]) => { const xa = jacks.get(a)[0], xb = jacks.get(b)[0]; return [Math.min(xa, xb) - 50, Math.max(xa, xb) + 50]; };
+  const levels = [], depth = new Map();
+  for (const cb of [...CABLES].filter(cb => spanOf(cb) > 0).sort((p, q) => spanOf(p) - spanOf(q))) {
+    const [lo, hi] = range(cb);
+    let k = levels.findIndex(l => l.every(([l0, l1]) => hi < l0 || lo > l1));
+    if (k < 0) { k = levels.length; levels.push([]); }
+    levels[k].push([lo, hi]);
+    depth.set(cb, k);
+  }
+  const H = top + modH + 34 + (Math.max(...depth.values()) + 1) * 30 + 40;
+  CABLES.forEach(([a, b, project], i) => {
+    const [ax, ay] = jacks.get(a), [bx, by] = jacks.get(b);
+    const span = Math.abs(bx - ax);
+    // Cords hang below the rack, each at its own depth so tags never collide.
+    // Lowest point of this symmetric cubic is 0.25*y_end + 0.75*y_ctrl.
+    const same = Math.abs(bx - ax) < 1;
+    const low = top + modH + 34 + (depth.get(CABLES[i]) ?? 0) * 30;
+    const yc = (low - 0.25 * Math.max(ay, by)) / 0.75;
+    // Jacks in one module: a short loop out past the module edge instead.
+    const c1 = same ? [ax + 52, ay + 6] : [ax + (bx - ax) * 0.12, yc];
+    const c2 = same ? [bx + 52, by - 6] : [bx - (bx - ax) * 0.12, yc];
+    const d = `M${ax} ${ay}C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${bx} ${by}`;
+    const ink = inks[i % inks.length];
+    const id = `cable${i}`;
+    // Midpoint of the cubic, for the project tag.
+    const mid = (p0, p1, p2, p3) => 0.125 * p0 + 0.375 * p1 + 0.375 * p2 + 0.125 * p3;
+    const mx = mid(ax, c1[0], c2[0], bx), my = mid(ay, c1[1], c2[1], by);
+    // Exact cord length by sampling the cubic, for the draw-in dash.
+    let len = 0;
+    const B = (t, p0, p1, p2, p3) => (1 - t) ** 3 * p0 + 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t ** 2 * p2 + t ** 3 * p3;
+    for (let k = 1, px = ax, py = ay; k <= 64; k++) {
+      const t = k / 64, x = B(t, ax, c1[0], c2[0], bx), y = B(t, ay, c1[1], c2[1], by);
+      len += Math.hypot(x - px, y - py); px = x; py = y;
+    }
+    const draw = `class="trace" style="--len:${Math.ceil(len + 4)};--delay:${i * 90}ms"`;
+    cables += `<path ${draw} d="${d}" fill="none" stroke="${c.bg}" stroke-width="9" stroke-linecap="round"/>`;
+    cables += `<path id="${id}" ${draw} d="${d}" fill="none" stroke="${ink}" stroke-width="4.5" stroke-linecap="round"/>`;
+    // Signal: a bright 72px streak runs the cord, then rests, on a loop.
+    cables += `<path class="signal" style="--len:${Math.ceil(len + 4)};animation-delay:${1100 + i * 480}ms" d="${d}" fill="none" stroke="${c.text}" stroke-width="4" stroke-linecap="round"/>`;
+    for (const [px, py] of [[ax, ay], [bx, by]]) plugs += `<circle cx="${px}" cy="${py}" r="7" fill="${ink}"/><circle cx="${px}" cy="${py}" r="2.5" fill="${c.bg}"/>`;
+    const tw = measure(MONO, project, 14) + 14;
+    const tx = mx, ty = my;
+    tags += `<rect x="${(tx - tw / 2).toFixed(1)}" y="${(ty - 12).toFixed(1)}" width="${tw.toFixed(1)}" height="22" rx="4" fill="${c.bg}" stroke="${ink}"/>${text(tx, ty + 4, project, { size: 14, fill: ink, anchor: "middle" })}`;
+  });
+
+  const title = "TOOLS";
+  const tSize = 104;
+  const body = `
+  ${text(PAD - 4, 56 + tSize * 0.72, title, { font: DISPLAY, size: tSize, fill: c.text, tracking: -0.01 })}
+  ${text(PAD + measure(DISPLAY, title, tSize, -0.01) + 24, 56 + tSize * 0.72 - 26, "Each cable joins two tools", { size: 18, fill: c.dim })}
+  ${text(PAD + measure(DISPLAY, title, tSize, -0.01) + 24, 56 + tSize * 0.72, "that shipped in the same project.", { size: 18, fill: c.dim })}
+  ${mods}
+  ${cables}
+  ${plugs}
+  ${tags}`;
+
+  const svg = plate({
+    w: W, h: H, c, body,
+    fonts: [DISPLAY, DISPLAY_SEMI, MONO],
+    label: "Tools, as a patch bay. " + MODULES.map(([n, it]) => `${n}: ${it.join(", ")}.`).join(" ") +
+      " Cables: " + CABLES.map(([a, b, p]) => `${a} to ${b} in ${p}`).join("; ") + ".",
+  });
+  return svg.replace("@media (prefers-reduced-motion: reduce) {", `.signal { stroke-dasharray: 72 var(--len); stroke-dashoffset: 72; opacity: 0; animation: flow 2600ms cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+    @keyframes flow { 0% { stroke-dashoffset: 72; opacity: 1; } 62% { stroke-dashoffset: calc(-1px * var(--len)); opacity: 1; } 63%, 100% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .signal { display: none; }`);
+}
+
 // ---------------------------------------------------------------- write
 
-const PLATES = { hero, dommel, zonformer, paleguard, contact };
+const PLATES = { hero, dommel, zonformer, paleguard, tools, contact };
 mkdirSync(resolve("assets"), { recursive: true });
 for (const [name, fn] of Object.entries(PLATES)) {
   for (const [theme, c] of Object.entries(THEMES)) {
     const out = resolve(`assets/plate-${name}-${theme}.svg`);
-    writeFileSync(out, fn(c));
+    writeFileSync(out, fn(c, theme));
     console.log(`wrote ${out}`);
   }
 }
