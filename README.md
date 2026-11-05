@@ -4,6 +4,7 @@
   Every image is an "instrument plate": oscilloscope in dark theme, chart
   recorder in light theme. Each <picture> swaps variants by colour scheme.
     scripts/render-plates.mjs     hero, project, tools, contact plates (run by hand, needs qrencode)
+    scripts/scan-stack.py         scans repos for tool evidence -> data/repo-tools.json (local only, lists private repos)
     scripts/render-activity.mjs   contributions plate  (weekly, CI)
     scripts/render-languages.mjs  languages plate      (weekly, CI)
     scripts/plate-kit.mjs         palette, type, frame shared by all three
@@ -80,7 +81,7 @@ Hackathons: [CodeCultivators at Agrithon](https://github.com/zParik/CodeCultivat
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./assets/plate-tools-dark.svg">
-  <img src="./assets/plate-tools-light.svg" width="100%" alt="Tools as a patch bay. Cables join tools that shipped together: in PaleGuard, Python to PyTorch, Dart to Npcap, FastAPI to gRPC and to InfluxDB; Python to OpenCV in CV-Project; Rust to Tauri and TypeScript to React in Qyra; Node.js to AES-GCM in ARCHON; Hyprland to Lua in Valkyrn.">
+  <img src="./assets/plate-tools-light.svg" width="100%" alt="Tools as a switch matrix: 43 tools across 12 projects, with a lit port wherever a project uses a tool, based on a scan of 51 repositories. Full list below.">
 </picture>
 
 <details>
@@ -88,12 +89,12 @@ Hackathons: [CodeCultivators at Agrithon](https://github.com/zParik/CodeCultivat
 
 <br/>
 
-**Languages:** C++, C, Python, Rust, TypeScript, Dart\
-**ML and vision:** PyTorch, OpenCV, YOLOv8, MediaPipe\
-**App and web:** Tauri, Flutter, React, Next.js, Node.js, FastAPI, Django, Flask\
-**Networking and security:** Npcap, gRPC, Protobuf, AES-GCM, RSA blind signatures, ECDHE\
-**Data and infrastructure:** PostgreSQL, InfluxDB, MongoDB, Supabase, Docker, CMake\
-**OS and shell:** Arch Linux, Windows, Bash, PowerShell, Hyprland, Lua
+**Languages:** C++, C, Python, Rust, TypeScript, Dart, Lua\
+**ML and vision:** PyTorch, TensorFlow, scikit-learn, Stable-Baselines3, OpenCV, YOLOv8, MediaPipe, NumPy\
+**Data:** PostgreSQL, InfluxDB, MongoDB, SQLite, Redis, Supabase\
+**App and web:** Tauri, Flutter, React, Next.js, Node.js, FastAPI, Flask, Django, Tailwind, Vite\
+**Networking and security:** Npcap, gRPC, Protobuf, AES-GCM, blind RSA signatures\
+**OS and build:** Docker, CMake, Bash, PowerShell, Arch Linux, Hyprland, Windows
 
 </details>
 

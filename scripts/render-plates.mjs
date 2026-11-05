@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Render the static profile plates (hero + project plates) in dark and light.
 // Each project plate draws the mechanism of the project, not a logo.
-// Needs `qrencode` on PATH for the contact plate.
+// Needs `qrencode` on PATH for the contact plate, and data/repo-tools.json
+// (from scripts/scan-stack.py) for the tools matrix.
 // Output: assets/plate-<name>-<theme>.svg
 
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import {
@@ -282,128 +283,132 @@ function contact(c) {
 
 // ---------------------------------------------------------------- tools
 
-// A patch bay. Modules are tool groups; each cable joins two tools that
-// shipped together in a named project, and carries a looping signal pulse.
-const MODULES = [
-  ["LANGUAGES",      ["C++", "C", "Python", "Rust", "TypeScript", "Dart"]],
-  ["ML + VISION",    ["PyTorch", "OpenCV", "YOLOv8", "MediaPipe"]],
-  ["APP + WEB",      ["Tauri", "Flutter", "React", "Next.js", "Node.js", "FastAPI", "Django", "Flask"]],
-  ["NET + SECURITY", ["Npcap", "gRPC", "Protobuf", "AES-GCM", "Blind RSA", "ECDHE"]],
-  ["DATA + INFRA",   ["PostgreSQL", "InfluxDB", "MongoDB", "Supabase", "Docker", "CMake"]],
-  ["OS + SHELL",     ["Arch Linux", "Windows", "Bash", "PowerShell", "Hyprland", "Lua"]],
+// A switch matrix. Rows are tools (ports), columns are projects (units).
+// A lit port means that project used that tool. Evidence comes from
+// data/repo-tools.json (scripts/scan-stack.py: language stats + dependency
+// manifests), plus EXTRA entries for evidence a manifest cannot show.
+const repoTools = JSON.parse(readFileSync(resolve("data/repo-tools.json"), "utf8"));
+
+const PROJECTS = [
+  ["PaleGuard",   ["zParik/CapStoneProject"]],
+  ["Dommel",      ["zParik/dommel"]],
+  ["ZonFormer",   ["zParik/HPC"]],
+  ["Qyra",        ["zParik/Qyra"]],
+  ["ARCHON",      ["zParik/ARCHON"]],
+  ["NotBigBrother", ["zParik/NotBigBrother"]],
+  ["CV-Project",  ["zParik/CV-Project"]],
+  ["Sign lang",   ["zParik/congenial-octo-giggle"]],
+  ["Valkyrn",     ["zParik/Valkyrn"]],
+  ["EcresWeb",    ["zParik/EcresWeb"]],
+  ["Reddit-clone",["zParik/Reddit-clone"]],
+  ["Hackathons",  ["zParik/CodeCultivators---CommHackathon", "zParik/CodeCultivators---Agrithon", "zParik/Devjams"]],
 ];
-const CABLES = [
-  // [from, to, project]
-  ["Python", "PyTorch", "PaleGuard"],
-  ["Python", "OpenCV", "CV-Project"],
-  ["Rust", "Tauri", "Qyra"],
-  ["TypeScript", "React", "Qyra"],
-  ["Dart", "Npcap", "PaleGuard"],
-  ["FastAPI", "gRPC", "PaleGuard"],
-  ["FastAPI", "InfluxDB", "PaleGuard"],
-  ["Node.js", "AES-GCM", "ARCHON"],
-  ["Hyprland", "Lua", "Valkyrn"],
-];
-const CABLE_INKS = {
-  dark:  ["#22d3ee", "#f5a524", "#f34b7d", "#a3e635", "#c084fc", "#60a5fa"],
-  light: ["#0b6b85", "#b93b0a", "#c2185b", "#4d7c0f", "#7e22ce", "#1d4ed8"],
+
+const EXTRA = {
+  "zParik/CapStoneProject": ["Npcap", "Windows"],          // KnowledgeBase: WinPcap/Npcap via Dart FFI on Windows
+  "zParik/HPC": ["PyTorch"],                               // imports torch
+  "zParik/ARCHON": ["AES-GCM"],                            // aes-256-gcm in relay code
+  "zParik/CodeCultivators---CommHackathon": ["AES-GCM"],   // AES-GCM in source
+  "zParik/Qyra": ["Arch Linux", "Hyprland"],               // Wayland fixes for Arch + Hyprland
+  "zParik/Valkyrn": ["Arch Linux", "Hyprland"],            // Hyprland rice, Arch installer
+  "zParik/congenial-octo-giggle": ["TensorFlow", "MediaPipe", "OpenCV", "YOLOv8", "Flask"], // imports
 };
 
-function tools(c, theme) {
-  const top = 200, rowH = 40, headH = 60;
-  const gap = 12;
-  const modW = (W - PAD * 2 - gap * (MODULES.length - 1)) / MODULES.length;
-  const rows = Math.max(...MODULES.map(m => m[1].length));
-  const modH = headH + rows * rowH + 20;
-  const panel = theme === "dark" ? "#0f161e" : "#ebe6da";
+const GROUPS = [
+  ["LANGUAGES",       ["C++", "C", "Python", "Rust", "TypeScript", "Dart", "Lua"]],
+  ["ML + VISION",     ["PyTorch", "TensorFlow", "scikit-learn", "Stable-Baselines3", "OpenCV", "YOLOv8", "MediaPipe", "NumPy"]],
+  ["DATA",            ["PostgreSQL", "InfluxDB", "MongoDB", "SQLite", "Redis", "Supabase"]],
+  ["APP + WEB",       ["Tauri", "Flutter", "React", "Next.js", "Node.js", "FastAPI", "Flask", "Django", "Tailwind", "Vite"]],
+  ["NET + SECURITY",  ["Npcap", "gRPC", "Protobuf", "AES-GCM", "Blind RSA"]],
+  ["OS + BUILD",      ["Docker", "CMake", "Bash", "PowerShell", "Arch Linux", "Hyprland", "Windows"]],
+];
 
-  const jacks = new Map();
-  let mods = "";
-  MODULES.forEach(([name, items], mi) => {
-    const x = PAD + mi * (modW + gap);
-    const screws = [[x + 12, top + 12], [x + modW - 12, top + 12], [x + 12, top + modH - 12], [x + modW - 12, top + modH - 12]]
-      .map(([sx, sy]) => `<circle cx="${sx}" cy="${sy}" r="3.5" fill="${c.bg}" stroke="${c.frame}"/>`).join("");
-    mods += `<rect x="${x}" y="${top}" width="${modW}" height="${modH}" rx="8" fill="${panel}" stroke="${c.frame}"/>${screws}`;
-    mods += text(x + 18, top + 42, name, { font: DISPLAY_SEMI, size: 26, fill: c.text, tracking: 0.01 });
-    items.forEach((item, i) => {
-      const jx = x + modW - 24, jy = top + headH + 20 + i * rowH;
-      jacks.set(item, [jx, jy]);
-      mods += `<circle cx="${jx}" cy="${jy}" r="9" fill="${panel}" stroke="${c.dim}" stroke-width="1.5"/><circle cx="${jx}" cy="${jy}" r="4.5" fill="${c.bg}"/>`;
-      mods += text(x + 18, jy + 6, item, { size: 16, fill: c.text });
+const GROUP_INKS = {
+  dark:  ["#22d3ee", "#f5a524", "#a3e635", "#f34b7d", "#c084fc", "#60a5fa"],
+  light: ["#0b6b85", "#b93b0a", "#4d7c0f", "#c2185b", "#7e22ce", "#1d4ed8"],
+};
+
+const toolsOf = repo => new Set([...(repoTools[repo] || []), ...(EXTRA[repo] || [])]);
+const usedBy = (tool, repos) => repos.some(r => toolsOf(r).has(tool));
+const repoCount = tool => Object.keys(repoTools).filter(r => toolsOf(r).has(tool)).length;
+
+function tools(c, theme) {
+  const halves = [GROUPS.slice(0, 3), GROUPS.slice(3)];
+  const halfGap = 36;
+  const halfW = (W - PAD * 2 - halfGap) / 2;
+  const labelW = 166, colW = 26, countW = 32;
+  const top = 196, headH = 112, groupH = 40, rowH = 26;
+  const rowsOf = gs => gs.reduce((n, [, t]) => n + groupH + t.length * rowH, 0);
+  const bodyH = Math.max(...halves.map(rowsOf));
+  const H = top + headH + bodyH + 72;
+  const panel = theme === "dark" ? "#0f161e" : "#ebe6da";
+  const stripe = theme === "dark" ? "#121a24" : "#e5dfd1";
+  const inks = GROUP_INKS[theme].map(h => ensureContrast(h, panel, 3));
+  const r = rng(5);
+
+  let out = "";
+  let gi = 0;
+  halves.forEach((groups, hi) => {
+    const x0 = PAD + hi * (halfW + halfGap);
+    const colX = k => x0 + labelW + k * colW + colW / 2;
+    const y0 = top + headH;
+    // Rack panel with ears and screw holes.
+    out += `<rect x="${x0 - 14}" y="${top - 8}" width="${halfW + 28}" height="${headH + bodyH + 28}" rx="8" fill="${panel}" stroke="${c.frame}"/>`;
+    for (const yy of [top + 10, top + headH + bodyH + 2]) for (const xx of [x0 - 4, x0 + halfW + 4])
+      out += `<circle cx="${xx}" cy="${yy}" r="3.5" fill="${c.bg}" stroke="${c.frame}"/>`;
+    // Project headers, angled like labels on a switch.
+    PROJECTS.forEach(([name], k) => {
+      const hx = colX(k), hy = y0 - 12;
+      out += `<line x1="${hx}" x2="${hx}" y1="${y0 - 6}" y2="${y0 + bodyH - 4}" stroke="${c.grid}" stroke-width="1"/>`;
+      out += `<text x="${hx}" y="${hy}" transform="rotate(-55 ${hx} ${hy})" font-family="${MONO}" font-size="14" fill="${c.text}">${esc(name)}</text>`;
+    });
+    const rx = x0 + labelW + PROJECTS.length * colW + countW - 12, ry = y0 - 12;
+    out += `<text x="${rx}" y="${ry}" transform="rotate(-55 ${rx} ${ry})" font-family="${MONO}" font-size="14" fill="${c.dim}">repos</text>`;
+    let y = y0;
+    groups.forEach(([gname, list]) => {
+      const ink = inks[gi++];
+      out += `<rect x="${x0 - 2}" y="${y + 10}" width="4" height="20" rx="1" fill="${ink}"/>`;
+      out += text(x0 + 10, y + 28, gname, { font: DISPLAY_SEMI, size: 22, fill: c.text, tracking: 0.02 });
+      y += groupH;
+      list.forEach((tool, ti) => {
+        const cy = y + rowH / 2;
+        if (ti % 2 === 0) out += `<rect x="${x0}" y="${y}" width="${halfW}" height="${rowH}" fill="${stripe}"/>`;
+        out += text(x0 + 10, cy + 5, tool, { size: 15, fill: c.text });
+        PROJECTS.forEach(([, repos], k) => {
+          const cx = colX(k);
+          if (usedBy(tool, repos)) {
+            const dur = (2.6 + r() * 3.4).toFixed(2), delay = (r() * 4).toFixed(2);
+            out += `<circle class="led" style="animation-duration:${dur}s;animation-delay:${delay}s" cx="${cx}" cy="${cy}" r="6" fill="${ink}"/>`;
+          } else {
+            out += `<circle cx="${cx}" cy="${cy}" r="4" fill="none" stroke="${c.frame}" stroke-width="1.25"/>`;
+          }
+        });
+        out += text(x0 + labelW + PROJECTS.length * colW + countW - 4, cy + 5, repoCount(tool), { size: 14, fill: c.dim, anchor: "end" });
+        y += rowH;
+      });
     });
   });
 
-  // Cables droop under gravity; sag grows with span.
-  let cables = "", plugs = "", tags = "";
-  const inks = CABLE_INKS[theme].map(h => ensureContrast(h, c.bg, 3));
-  // Pack cords into hang levels: shortest first, each into the highest level
-  // whose cords do not overlap it horizontally (tags included).
-  const spanOf = ([a, b]) => Math.abs(jacks.get(b)[0] - jacks.get(a)[0]);
-  const range = ([a, b]) => { const xa = jacks.get(a)[0], xb = jacks.get(b)[0]; return [Math.min(xa, xb) - 50, Math.max(xa, xb) + 50]; };
-  const levels = [], depth = new Map();
-  for (const cb of [...CABLES].filter(cb => spanOf(cb) > 0).sort((p, q) => spanOf(p) - spanOf(q))) {
-    const [lo, hi] = range(cb);
-    let k = levels.findIndex(l => l.every(([l0, l1]) => hi < l0 || lo > l1));
-    if (k < 0) { k = levels.length; levels.push([]); }
-    levels[k].push([lo, hi]);
-    depth.set(cb, k);
-  }
-  const H = top + modH + 34 + (Math.max(...depth.values()) + 1) * 30 + 40;
-  CABLES.forEach(([a, b, project], i) => {
-    const [ax, ay] = jacks.get(a), [bx, by] = jacks.get(b);
-    const span = Math.abs(bx - ax);
-    // Cords hang below the rack, each at its own depth so tags never collide.
-    // Lowest point of this symmetric cubic is 0.25*y_end + 0.75*y_ctrl.
-    const same = Math.abs(bx - ax) < 1;
-    const low = top + modH + 34 + (depth.get(CABLES[i]) ?? 0) * 30;
-    const yc = (low - 0.25 * Math.max(ay, by)) / 0.75;
-    // Jacks in one module: a short loop out past the module edge instead.
-    const c1 = same ? [ax + 52, ay + 6] : [ax + (bx - ax) * 0.12, yc];
-    const c2 = same ? [bx + 52, by - 6] : [bx - (bx - ax) * 0.12, yc];
-    const d = `M${ax} ${ay}C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${bx} ${by}`;
-    const ink = inks[i % inks.length];
-    const id = `cable${i}`;
-    // Midpoint of the cubic, for the project tag.
-    const mid = (p0, p1, p2, p3) => 0.125 * p0 + 0.375 * p1 + 0.375 * p2 + 0.125 * p3;
-    const mx = mid(ax, c1[0], c2[0], bx), my = mid(ay, c1[1], c2[1], by);
-    // Exact cord length by sampling the cubic, for the draw-in dash.
-    let len = 0;
-    const B = (t, p0, p1, p2, p3) => (1 - t) ** 3 * p0 + 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t ** 2 * p2 + t ** 3 * p3;
-    for (let k = 1, px = ax, py = ay; k <= 64; k++) {
-      const t = k / 64, x = B(t, ax, c1[0], c2[0], bx), y = B(t, ay, c1[1], c2[1], by);
-      len += Math.hypot(x - px, y - py); px = x; py = y;
-    }
-    const draw = `class="trace" style="--len:${Math.ceil(len + 4)};--delay:${i * 90}ms"`;
-    cables += `<path ${draw} d="${d}" fill="none" stroke="${c.bg}" stroke-width="9" stroke-linecap="round"/>`;
-    cables += `<path id="${id}" ${draw} d="${d}" fill="none" stroke="${ink}" stroke-width="4.5" stroke-linecap="round"/>`;
-    // Signal: a bright 72px streak runs the cord, then rests, on a loop.
-    cables += `<path class="signal" style="--len:${Math.ceil(len + 4)};animation-delay:${1100 + i * 480}ms" d="${d}" fill="none" stroke="${c.text}" stroke-width="4" stroke-linecap="round"/>`;
-    for (const [px, py] of [[ax, ay], [bx, by]]) plugs += `<circle cx="${px}" cy="${py}" r="7" fill="${ink}"/><circle cx="${px}" cy="${py}" r="2.5" fill="${c.bg}"/>`;
-    const tw = measure(MONO, project, 14) + 14;
-    const tx = mx, ty = my;
-    tags += `<rect x="${(tx - tw / 2).toFixed(1)}" y="${(ty - 12).toFixed(1)}" width="${tw.toFixed(1)}" height="22" rx="4" fill="${c.bg}" stroke="${ink}"/>${text(tx, ty + 4, project, { size: 14, fill: ink, anchor: "middle" })}`;
-  });
-
+  const nRepos = Object.keys(repoTools).length;
   const title = "TOOLS";
   const tSize = 104;
+  const tx = PAD + measure(DISPLAY, title, tSize, -0.01) + 28;
   const body = `
   ${text(PAD - 4, 56 + tSize * 0.72, title, { font: DISPLAY, size: tSize, fill: c.text, tracking: -0.01 })}
-  ${text(PAD + measure(DISPLAY, title, tSize, -0.01) + 24, 56 + tSize * 0.72 - 26, "Each cable joins two tools", { size: 18, fill: c.dim })}
-  ${text(PAD + measure(DISPLAY, title, tSize, -0.01) + 24, 56 + tSize * 0.72, "that shipped in the same project.", { size: 18, fill: c.dim })}
-  ${mods}
-  ${cables}
-  ${plugs}
-  ${tags}`;
+  ${text(tx, 56 + tSize * 0.72 - 26, "A lit port means the project uses that tool.", { size: 18, fill: c.dim })}
+  ${text(tx, 56 + tSize * 0.72, `"repos" counts every repo it appears in, of ${nRepos} scanned.`, { size: 18, fill: c.dim })}
+  ${out}
+  ${text(W - PAD, H - 30, "source: dependency manifests + language stats, scripts/scan-stack.py", { size: 13, fill: c.dim, anchor: "end" })}`;
 
   const svg = plate({
     w: W, h: H, c, body,
     fonts: [DISPLAY, DISPLAY_SEMI, MONO],
-    label: "Tools, as a patch bay. " + MODULES.map(([n, it]) => `${n}: ${it.join(", ")}.`).join(" ") +
-      " Cables: " + CABLES.map(([a, b, p]) => `${a} to ${b} in ${p}`).join("; ") + ".",
+    label: "Tools matrix. " + PROJECTS.map(([name, repos]) =>
+      `${name}: ${GROUPS.flatMap(([, t]) => t).filter(t => usedBy(t, repos)).join(", ")}.`).join(" "),
   });
-  return svg.replace("@media (prefers-reduced-motion: reduce) {", `.signal { stroke-dasharray: 72 var(--len); stroke-dashoffset: 72; opacity: 0; animation: flow 2600ms cubic-bezier(0.45, 0, 0.55, 1) infinite; }
-    @keyframes flow { 0% { stroke-dashoffset: 72; opacity: 1; } 62% { stroke-dashoffset: calc(-1px * var(--len)); opacity: 1; } 63%, 100% { opacity: 0; } }
-    @media (prefers-reduced-motion: reduce) { .signal { display: none; }`);
+  return svg.replace("@media (prefers-reduced-motion: reduce) {", `.led { animation: blink 4s steps(1, end) infinite; }
+    @keyframes blink { 0%, 88% { opacity: 1; } 90% { opacity: 0.25; } 92% { opacity: 1; } 94% { opacity: 0.4; } 96%, 100% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .led { animation: none; }`);
 }
 
 // ---------------------------------------------------------------- write
